@@ -18,17 +18,29 @@ package io.github.mook.xiaomiwearablepatch;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
 import android.content.ContextWrapper;
+import android.content.res.XModuleResources;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class HookEntry implements IXposedHookLoadPackage {
+public class HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+    private List<String> packageNames = new ArrayList<>();
+
+    @Override
+    public void initZygote(StartupParam startupParam) {
+        XModuleResources instance = XModuleResources.createInstance(startupParam.modulePath, null);
+        packageNames = Arrays.asList(instance.getStringArray(R.array.xposedscope));
+    }
+
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!Objects.equals(lpparam.packageName, "com.xiaomi.wearable")) {
+        if (!packageNames.contains(lpparam.packageName)) {
             return;
         }
 
